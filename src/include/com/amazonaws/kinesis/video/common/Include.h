@@ -62,7 +62,7 @@ extern "C" {
 #define IS_RETRIABLE_COMMON_LIB_ERROR(error)                                                                                                         \
     ((error) == STATUS_INVALID_API_CALL_RETURN_JSON || (error) == STATUS_CURL_INIT_FAILED || (error) == STATUS_CURL_LIBRARY_INIT_FAILED ||           \
      (error) == STATUS_HMAC_GENERATION_ERROR || (error) == STATUS_CURL_PERFORM_FAILED || (error) == STATUS_IOT_INVALID_RESPONSE_LENGTH ||            \
-     (error) == STATUS_IOT_NULL_AWS_CREDS || (error) == STATUS_IOT_INVALID_URI_LEN || (error) == STATUS_IOT_EXPIRATION_OCCURS_IN_PAST ||                   \
+     (error) == STATUS_IOT_NULL_AWS_CREDS || (error) == STATUS_IOT_INVALID_URI_LEN || (error) == STATUS_IOT_EXPIRATION_OCCURS_IN_PAST ||             \
      (error) == STATUS_IOT_EXPIRATION_PARSING_FAILED || (error) == STATUS_IOT_CREATE_LWS_CONTEXT_FAILED ||                                           \
      (error) == STATUS_FILE_CREDENTIAL_PROVIDER_OPEN_FILE_FAILED || (error) == STATUS_FILE_CREDENTIAL_PROVIDER_INVALID_FILE_LENGTH ||                \
      (error) == STATUS_FILE_CREDENTIAL_PROVIDER_INVALID_FILE_FORMAT)
@@ -96,6 +96,11 @@ extern "C" {
  * Maximum allowed region name length
  */
 #define MAX_REGION_NAME_LEN 128
+
+/**
+ * Maximum allowed AWS service name length
+ */
+#define MAX_SERVICE_NAME_LEN 128
 
 /**
  * Maximum allowed user agent string length
@@ -309,6 +314,11 @@ extern "C" {
 #define KINESIS_VIDEO_SERVICE_NAME "kinesisvideo"
 
 /**
+ * Default AWS service name
+ */
+#define DEFAULT_AWS_SERVICE_NAME "kinesisvideo"
+
+/**
  * Control plane postfix
  */
 #define CONTROL_PLANE_URI_POSTFIX ".amazonaws.com"
@@ -477,6 +487,7 @@ struct __RequestInfo {
                                               //!< NOTE: The body will follow the main struct
     UINT32 bodySize;                          //!< Size of the body in bytes
     CHAR url[MAX_URI_CHAR_LEN + 1];           //!< The URL for the request
+    CHAR service[MAX_SERVICE_NAME_LEN + 1];   //!< The AWS service for the request
     CHAR certPath[MAX_PATH_LEN + 1];          //!< CA Certificate path to use - optional
     CHAR sslCertPath[MAX_PATH_LEN + 1];       //!< SSL Certificate file path to use - optional
     CHAR sslPrivateKeyPath[MAX_PATH_LEN + 1]; //!< SSL Certificate private key file path to use - optional
@@ -711,6 +722,7 @@ PUBLIC_API STATUS freeFileCredentialProvider(PAwsCredentialProvider*);
  * @param[in] PCHAR URL of the request
  * @param[in,opt] PCHAR Body of the request
  * @param[in] PCHAR Region
+ * @param[in] PCHAR AWS service name. If `NULL`, "kinesisvideo" is default
  * @param[in,opt] PCHAR CA Certificate path/file
  * @param[in,opt] PCHAR SSL Certificate path/file
  * @param [in,opt] PCHAR SSL Certificate private key file path
@@ -725,7 +737,7 @@ PUBLIC_API STATUS freeFileCredentialProvider(PAwsCredentialProvider*);
  *
  * @return STATUS code of the execution. STATUS_SUCCESS on success
  */
-PUBLIC_API STATUS createRequestInfo(PCHAR, PCHAR, PCHAR, PCHAR, PCHAR, PCHAR, SSL_CERTIFICATE_TYPE, PCHAR, UINT64, UINT64, UINT64, UINT64,
+PUBLIC_API STATUS createRequestInfo(PCHAR, PCHAR, PCHAR, PCHAR, PCHAR, PCHAR, PCHAR, SSL_CERTIFICATE_TYPE, PCHAR, UINT64, UINT64, UINT64, UINT64,
                                     PAwsCredentials, PRequestInfo*);
 
 /**

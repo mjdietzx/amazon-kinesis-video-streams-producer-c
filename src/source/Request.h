@@ -67,7 +67,7 @@ typedef struct __CurlRequest* PCurlRequest;
  * @param - STREAM_HANDLE - IN - Stream handle for which the request is for
  * @param - PCHAR - IN - Region
  * @param - UINT64 - IN - Current time
- * @param - UINT64 - IN - Connection timeout
+ * @param - UINT64IN -  - Connection timeout
  * @param - UINT64 - IN - Completion timeout
  * @param - UINT64 - IN - Call after time
  * @param - PCHAR - IN/OPT - Certificate path to use

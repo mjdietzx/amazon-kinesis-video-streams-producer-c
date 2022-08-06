@@ -73,7 +73,7 @@ STATUS generateAwsSigV4Signature(PRequestInfo pRequestInfo, PCHAR dateTimeStr, B
     hmacSize = SIZEOF(hmac);
     CHK_STATUS(generateRequestHmac((PBYTE) pScratchBuf, curSize, (PBYTE) dateTimeStr, SIGNATURE_DATE_STRING_LEN * SIZEOF(CHAR), hmac, &hmacSize));
     CHK_STATUS(generateRequestHmac(hmac, hmacSize, (PBYTE) pRequestInfo->region, (UINT32) STRLEN(pRequestInfo->region), hmac, &hmacSize));
-    CHK_STATUS(generateRequestHmac(hmac, hmacSize, (PBYTE) KINESIS_VIDEO_SERVICE_NAME, (UINT32) STRLEN(KINESIS_VIDEO_SERVICE_NAME), hmac, &hmacSize));
+    CHK_STATUS(generateRequestHmac(hmac, hmacSize, (PBYTE) pRequestInfo->service, (UINT32) STRLEN(pRequestInfo->service), hmac, &hmacSize));
     CHK_STATUS(generateRequestHmac(hmac, hmacSize, (PBYTE) AWS_SIG_V4_SIGNATURE_END, (UINT32) STRLEN(AWS_SIG_V4_SIGNATURE_END), hmac, &hmacSize));
     CHK_STATUS(generateRequestHmac(hmac, hmacSize, (PBYTE) pSignedStr, signedStrLen * SIZEOF(CHAR), hmac, &hmacSize));
 
@@ -122,7 +122,7 @@ STATUS signAwsRequestInfo(PRequestInfo pRequestInfo)
 
     // Get the host header
     CHK_STATUS(getRequestHost(pRequestInfo->url, &pHostStart, &pHostEnd));
-    len = (UINT32)(pHostEnd - pHostStart);
+    len = (UINT32) (pHostEnd - pHostStart);
 
     CHK_STATUS(setRequestHeader(pRequestInfo, AWS_SIG_V4_HEADER_HOST, 0, pHostStart, len));
     CHK_STATUS(setRequestHeader(pRequestInfo, AWS_SIG_V4_HEADER_AMZ_DATE, 0, dateTimeStr, 0));
@@ -172,7 +172,7 @@ STATUS signAwsRequestInfoQueryParam(PRequestInfo pRequestInfo)
 
     // Need to add host header
     CHK_STATUS(getRequestHost(pRequestInfo->url, &pHostStart, &pHostEnd));
-    len = (UINT32)(pHostEnd - pHostStart);
+    len = (UINT32) (pHostEnd - pHostStart);
     CHK_STATUS(setRequestHeader(pRequestInfo, AWS_SIG_V4_HEADER_HOST, 0, pHostStart, len));
 
     // Encode the credentials scope
@@ -192,7 +192,7 @@ STATUS signAwsRequestInfoQueryParam(PRequestInfo pRequestInfo)
 
     // Calculate the expiration in seconds
     expirationInSeconds = MIN(MAX_AWS_SIGV4_CREDENTIALS_EXPIRATION_IN_SECONDS,
-                              (UINT32)((pRequestInfo->pAwsCredentials->expiration - pRequestInfo->currentTime) / HUNDREDS_OF_NANOS_IN_A_SECOND));
+                              (UINT32) ((pRequestInfo->pAwsCredentials->expiration - pRequestInfo->currentTime) / HUNDREDS_OF_NANOS_IN_A_SECOND));
     expirationInSeconds = MAX(MIN_AWS_SIGV4_CREDENTIALS_EXPIRATION_IN_SECONDS, expirationInSeconds);
 
     // Add the params
@@ -278,7 +278,7 @@ STATUS getCanonicalQueryParams(PCHAR pUrl, UINT32 urlLen, BOOL uriEncode, PCHAR*
     CHK_STATUS(singleListCreate(&pSingleList));
 
     while (iterate) {
-        pQueryParamEnd = STRNCHR(pQueryParamStart, (UINT32)(pEndPtr - pQueryParamStart), '&');
+        pQueryParamEnd = STRNCHR(pQueryParamStart, (UINT32) (pEndPtr - pQueryParamStart), '&');
         if (pQueryParamEnd == NULL) {
             // break the loop
             iterate = FALSE;
@@ -287,12 +287,12 @@ STATUS getCanonicalQueryParams(PCHAR pUrl, UINT32 urlLen, BOOL uriEncode, PCHAR*
         }
 
         // Process the resulting param name and value
-        CHK(NULL != (pParamValue = STRNCHR(pQueryParamStart, (UINT32)(pQueryParamEnd - pQueryParamStart), '=')), STATUS_INVALID_ARG);
-        nameLen = (UINT32)(pParamValue - pQueryParamStart);
+        CHK(NULL != (pParamValue = STRNCHR(pQueryParamStart, (UINT32) (pQueryParamEnd - pQueryParamStart), '=')), STATUS_INVALID_ARG);
+        nameLen = (UINT32) (pParamValue - pQueryParamStart);
 
         // Advance param start past '='
         pParamValue++;
-        valueLen = (UINT32)(pQueryParamEnd - pParamValue);
+        valueLen = (UINT32) (pQueryParamEnd - pParamValue);
 
         // Max len is 3 times the size of the allocation to account for max bloat for encoding
         maxLen = MIN(MAX_URI_CHAR_LEN, nameLen + 1 + valueLen * 3 + 1);
@@ -381,7 +381,7 @@ STATUS getCanonicalQueryParams(PCHAR pUrl, UINT32 urlLen, BOOL uriEncode, PCHAR*
     }
 
     *pCurPtr = '\0';
-    queryLen = (UINT32)(pCurPtr - pQuery);
+    queryLen = (UINT32) (pCurPtr - pQuery);
 
 CleanUp:
 
@@ -457,7 +457,7 @@ STATUS generateCanonicalRequestString(PRequestInfo pRequestInfo, PCHAR pRequestS
 
     // Get the canonical URI
     CHK_STATUS(getCanonicalUri(pRequestInfo->url, urlLen, &pUriStart, &pUriEnd, &defaultPath));
-    len = defaultPath ? 1 : (UINT32)(pUriEnd - pUriStart);
+    len = defaultPath ? 1 : (UINT32) (pUriEnd - pUriStart);
 
     CHK(curLen + len + 1 <= requestLen, STATUS_BUFFER_TOO_SMALL);
     MEMCPY(pCurPtr, pUriStart, len * SIZEOF(CHAR));
@@ -472,7 +472,7 @@ STATUS generateCanonicalRequestString(PRequestInfo pRequestInfo, PCHAR pRequestS
     // The start of the query params is either end of the URI or ? so we skip one in that case
     pQueryStart = (pUriEnd == pQueryEnd) ? pUriEnd : pUriEnd + 1;
 
-    len = (UINT32)(pQueryEnd - pQueryStart);
+    len = (UINT32) (pQueryEnd - pQueryStart);
     CHK(curLen + len + 1 <= requestLen, STATUS_BUFFER_TOO_SMALL);
     MEMCPY(pCurPtr, pQueryStart, len * SIZEOF(CHAR));
     pCurPtr += len;
@@ -546,7 +546,7 @@ STATUS generateCanonicalHeaders(PRequestInfo pRequestInfo, PCHAR pCanonicalHeade
         // Process only if we have a canonical header name
         if (IS_CANONICAL_HEADER_NAME(pRequestHeader->pName)) {
             CHK_STATUS(TRIMSTRALL(pRequestHeader->pValue, pRequestHeader->valueLen, &pStart, &pEnd));
-            valueLen = (UINT32)(pEnd - pStart);
+            valueLen = (UINT32) (pEnd - pStart);
 
             // Increase the overall length as we use the lower-case header, colon, trimmed lower-case value and new line
             overallLen += pRequestHeader->nameLen + 1 + valueLen + 1;
@@ -658,7 +658,7 @@ STATUS generateSignatureDateTime(UINT64 currentTime, PCHAR pDateTimeStr)
     CHK(pDateTimeStr != NULL, STATUS_NULL_ARG);
 
     // Convert to time_t
-    timeT = (time_t)(currentTime / HUNDREDS_OF_NANOS_IN_A_SECOND);
+    timeT = (time_t) (currentTime / HUNDREDS_OF_NANOS_IN_A_SECOND);
     retSize = STRFTIME(pDateTimeStr, SIGNATURE_DATE_TIME_STRING_LEN, DATE_TIME_STRING_FORMAT, GMTIME(&timeT));
     CHK(retSize > 0, STATUS_BUFFER_TOO_SMALL);
     pDateTimeStr[retSize] = '\0';
@@ -678,14 +678,14 @@ STATUS generateCredentialScope(PRequestInfo pRequestInfo, PCHAR dateTimeStr, PCH
     CHK(pRequestInfo != NULL && dateTimeStr != NULL && pScopeLen != NULL, STATUS_NULL_ARG);
 
     // Calculate the max string length with a null terminator at the end
-    scopeLen = SIGNATURE_DATE_TIME_STRING_LEN + 1 + MAX_REGION_NAME_LEN + 1 + (UINT32) STRLEN(KINESIS_VIDEO_SERVICE_NAME) + 1 +
+    scopeLen = SIGNATURE_DATE_TIME_STRING_LEN + 1 + MAX_REGION_NAME_LEN + 1 + (UINT32) STRLEN(pRequestInfo->service) + 1 +
         (UINT32) STRLEN(AWS_SIG_V4_SIGNATURE_END) + 1;
 
     // Early exit on buffer calculation
     CHK(pScope != NULL, retStatus);
 
     scopeLen = (UINT32) SNPRINTF(pScope, *pScopeLen, CREDENTIAL_SCOPE_TEMPLATE, SIGNATURE_DATE_STRING_LEN, dateTimeStr, pRequestInfo->region,
-                                 KINESIS_VIDEO_SERVICE_NAME, AWS_SIG_V4_SIGNATURE_END);
+                                 pRequestInfo->service, AWS_SIG_V4_SIGNATURE_END);
     CHK(scopeLen > 0 && scopeLen <= *pScopeLen, STATUS_BUFFER_TOO_SMALL);
 
 CleanUp:
@@ -707,15 +707,15 @@ STATUS generateEncodedCredentials(PRequestInfo pRequestInfo, PCHAR dateTimeStr, 
     CHK(pRequestInfo != NULL && dateTimeStr != NULL && pCredsLen != NULL, STATUS_NULL_ARG);
 
     // Calculate the max string length with '/' and a null terminator at the end
-    credsLen = MAX_ACCESS_KEY_LEN + 1 + SIGNATURE_DATE_TIME_STRING_LEN + 1 + MAX_REGION_NAME_LEN + 1 + (UINT32) STRLEN(KINESIS_VIDEO_SERVICE_NAME) +
-        1 + (UINT32) STRLEN(AWS_SIG_V4_SIGNATURE_END) + 1;
+    credsLen = MAX_ACCESS_KEY_LEN + 1 + SIGNATURE_DATE_TIME_STRING_LEN + 1 + MAX_REGION_NAME_LEN + 1 + (UINT32) STRLEN(pRequestInfo->service) + 1 +
+        (UINT32) STRLEN(AWS_SIG_V4_SIGNATURE_END) + 1;
 
     // Early exit on buffer calculation
     CHK(pCreds != NULL, retStatus);
 
     credsLen = (UINT32) SNPRINTF(pCreds, *pCredsLen, URL_ENCODED_CREDENTIAL_TEMPLATE, pRequestInfo->pAwsCredentials->accessKeyIdLen,
                                  pRequestInfo->pAwsCredentials->accessKeyId, SIGNATURE_DATE_STRING_LEN, dateTimeStr, pRequestInfo->region,
-                                 KINESIS_VIDEO_SERVICE_NAME, AWS_SIG_V4_SIGNATURE_END);
+                                 pRequestInfo->service, AWS_SIG_V4_SIGNATURE_END);
     CHK(credsLen > 0 && credsLen <= *pCredsLen, STATUS_BUFFER_TOO_SMALL);
 
 CleanUp:
@@ -816,7 +816,7 @@ STATUS getCanonicalUri(PCHAR pUrl, UINT32 len, PCHAR* ppStart, PCHAR* ppEnd, PBO
         } else if (*pCur == '/') {
             // This is the case of the path which we find
             pStart = pCur;
-            pEnd = STRNCHR(pCur, urlLen - (UINT32)(pCur - pUrl), '?');
+            pEnd = STRNCHR(pCur, urlLen - (UINT32) (pCur - pUrl), '?');
             iterate = FALSE;
         }
 
@@ -860,7 +860,7 @@ STATUS uriEncodeString(PCHAR pSrc, UINT32 srcLen, PCHAR pDst, PUINT32 pDstLen)
 
     CHK(pSrc != NULL && pDstLen != NULL, STATUS_NULL_ARG);
 
-    while (((UINT32)(pCurPtr - pSrc) < strLen) && ((ch = *pCurPtr++) != '\0')) {
+    while (((UINT32) (pCurPtr - pSrc) < strLen) && ((ch = *pCurPtr++) != '\0')) {
         if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '-' || ch == '~' || ch == '.') {
             encodedLen++;
 
@@ -924,9 +924,9 @@ STATUS uriDecodeString(PCHAR pSrc, UINT32 srcLen, PCHAR pDst, PUINT32 pDstLen)
 
     CHK(pSrc != NULL && pDstLen != NULL, STATUS_NULL_ARG);
 
-    while (((UINT32)(pCurPtr - pSrc) < strLen) && ((ch = *pCurPtr) != '\0')) {
+    while (((UINT32) (pCurPtr - pSrc) < strLen) && ((ch = *pCurPtr) != '\0')) {
         if (ch == '%') {
-            CHK((UINT32)(pCurPtr - pSrc) + decLen <= strLen && *(pCurPtr + 1) != '\0' && *(pCurPtr + 2) != '\0', STATUS_INVALID_ARG);
+            CHK((UINT32) (pCurPtr - pSrc) + decLen <= strLen && *(pCurPtr + 1) != '\0' && *(pCurPtr + 2) != '\0', STATUS_INVALID_ARG);
             if (pDec != NULL) {
                 size = remaining;
                 CHK_STATUS(hexDecode(pCurPtr + 1, 2, (PBYTE) pDec, &size));

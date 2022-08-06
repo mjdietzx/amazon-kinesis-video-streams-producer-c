@@ -1,7 +1,7 @@
 #define LOG_CLASS "RequestInfo"
 #include "Include_i.h"
 
-STATUS createRequestInfo(PCHAR url, PCHAR body, PCHAR region, PCHAR certPath, PCHAR sslCertPath, PCHAR sslPrivateKeyPath,
+STATUS createRequestInfo(PCHAR url, PCHAR body, PCHAR region, PCHAR service, PCHAR certPath, PCHAR sslCertPath, PCHAR sslPrivateKeyPath,
                          SSL_CERTIFICATE_TYPE certType, PCHAR userAgent, UINT64 connectionTimeout, UINT64 completionTimeout, UINT64 lowSpeedLimit,
                          UINT64 lowSpeedTimeLimit, PAwsCredentials pAwsCredentials, PRequestInfo* ppRequestInfo)
 {
@@ -14,7 +14,7 @@ STATUS createRequestInfo(PCHAR url, PCHAR body, PCHAR region, PCHAR certPath, PC
 
     // Add body to the size excluding NULL terminator
     if (body != NULL) {
-        bodySize = (UINT32)(STRLEN(body) * SIZEOF(CHAR));
+        bodySize = (UINT32) (STRLEN(body) * SIZEOF(CHAR));
         size += bodySize;
     }
 
@@ -31,7 +31,9 @@ STATUS createRequestInfo(PCHAR url, PCHAR body, PCHAR region, PCHAR certPath, PC
     pRequestInfo->currentTime = GETTIME();
     pRequestInfo->callAfter = pRequestInfo->currentTime;
     STRNCPY(pRequestInfo->region, region, MAX_REGION_NAME_LEN);
+    STRNCPY(pRequestInfo->service, (service == NULL) ? DEFAULT_AWS_SERVICE_NAME : service, MAX_SERVICE_NAME_LEN);
     STRNCPY(pRequestInfo->url, url, MAX_URI_CHAR_LEN);
+
     if (certPath != NULL) {
         STRNCPY(pRequestInfo->certPath, certPath, MAX_PATH_LEN);
     }
@@ -51,7 +53,7 @@ STATUS createRequestInfo(PCHAR url, PCHAR body, PCHAR region, PCHAR certPath, PC
     // If the body is specified then it will be a request/response call
     // Otherwise we are streaming
     if (body != NULL) {
-        pRequestInfo->body = (PCHAR)(pRequestInfo + 1);
+        pRequestInfo->body = (PCHAR) (pRequestInfo + 1);
         MEMCPY(pRequestInfo->body, body, bodySize);
     }
 
@@ -59,7 +61,7 @@ STATUS createRequestInfo(PCHAR url, PCHAR body, PCHAR region, PCHAR certPath, PC
     CHK_STATUS(singleListCreate(&pRequestInfo->pRequestHeaders));
 
     // Set user agent header
-    CHK_STATUS(setRequestHeader(pRequestInfo, (PCHAR) "user-agent", 0, userAgent, 0));
+    CHK_STATUS(setRequestHeader(pRequestInfo, (PCHAR) "user-agent", 0, userAgent, (userAgent == NULL) ? 0 : STRLEN(userAgent)));
 
 CleanUp:
 
@@ -155,7 +157,7 @@ STATUS createRequestHeader(PCHAR headerName, UINT32 headerNameLen, PCHAR headerV
     pRequestHeader->valueLen = valueLen;
 
     // Pointing after the structure
-    pRequestHeader->pName = (PCHAR)(pRequestHeader + 1);
+    pRequestHeader->pName = (PCHAR) (pRequestHeader + 1);
     pRequestHeader->pValue = pRequestHeader->pName + nameLen + 1;
 
     MEMCPY(pRequestHeader->pName, headerName, nameLen * SIZEOF(CHAR));

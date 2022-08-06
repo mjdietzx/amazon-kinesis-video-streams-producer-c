@@ -269,17 +269,17 @@ STATUS createAbstractDefaultCallbacksProvider(UINT32 callbackChainCount, API_CAL
     pCallbacksProvider->clientCallbacks.customData = (UINT64) pCallbacksProvider;
 
     // Set callback chain pointers
-    pCallbacksProvider->pProducerCallbacks = (PProducerCallbacks)(pCallbacksProvider + 1);
-    pCallbacksProvider->pStreamCallbacks = (PStreamCallbacks)(pCallbacksProvider->pProducerCallbacks + callbackChainCount);
-    pCallbacksProvider->pAuthCallbacks = (PAuthCallbacks)(pCallbacksProvider->pStreamCallbacks + callbackChainCount);
-    pCallbacksProvider->pApiCallbacks = (PApiCallbacks)(pCallbacksProvider->pAuthCallbacks + callbackChainCount);
+    pCallbacksProvider->pProducerCallbacks = (PProducerCallbacks) (pCallbacksProvider + 1);
+    pCallbacksProvider->pStreamCallbacks = (PStreamCallbacks) (pCallbacksProvider->pProducerCallbacks + callbackChainCount);
+    pCallbacksProvider->pAuthCallbacks = (PAuthCallbacks) (pCallbacksProvider->pStreamCallbacks + callbackChainCount);
+    pCallbacksProvider->pApiCallbacks = (PApiCallbacks) (pCallbacksProvider->pAuthCallbacks + callbackChainCount);
 
     // Set the default Platform callbacks
     CHK_STATUS(setDefaultPlatformCallbacks(pCallbacksProvider));
 
     // Create the default Curl API callbacks
-    CHK_STATUS(createCurlApiCallbacks(pCallbacksProvider, region, cacheType, endpointCachingPeriod, controlPlaneUrl, certPath, userAgentName,
-                                      customUserAgent, &pCurlApiCallbacks));
+    CHK_STATUS(createCurlApiCallbacks(pCallbacksProvider, region, DEFAULT_AWS_SERVICE_NAME, cacheType, endpointCachingPeriod, controlPlaneUrl,
+                                      certPath, userAgentName, customUserAgent, &pCurlApiCallbacks));
 
 CleanUp:
 
