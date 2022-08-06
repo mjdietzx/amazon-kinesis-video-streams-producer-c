@@ -66,6 +66,7 @@ typedef struct __CurlRequest* PCurlRequest;
  * @param - PCHAR - IN/OPT - Body of the request
  * @param - STREAM_HANDLE - IN - Stream handle for which the request is for
  * @param - PCHAR - IN - Region
+ * @param - PCHAR - IN - AWS Service name
  * @param - UINT64 - IN - Current time
  * @param - UINT64IN -  - Connection timeout
  * @param - UINT64 - IN - Completion timeout
@@ -77,7 +78,7 @@ typedef struct __CurlRequest* PCurlRequest;
  *
  * @return - STATUS code of the execution
  */
-STATUS createCurlRequest(HTTP_REQUEST_VERB, PCHAR, PCHAR, STREAM_HANDLE, PCHAR, UINT64, UINT64, UINT64, UINT64, PCHAR, PAwsCredentials,
+STATUS createCurlRequest(HTTP_REQUEST_VERB, PCHAR, PCHAR, STREAM_HANDLE, PCHAR, PCHAR, UINT64, UINT64, UINT64, UINT64, PCHAR, PAwsCredentials,
                          struct __CurlApiCallbacks*, PCurlRequest*);
 
 /**

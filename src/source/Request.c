@@ -7,9 +7,9 @@
 /**
  * Create request object
  */
-STATUS createCurlRequest(HTTP_REQUEST_VERB curlVerb, PCHAR url, PCHAR body, STREAM_HANDLE streamHandle, PCHAR region, UINT64 currentTime,
-                         UINT64 connectionTimeout, UINT64 completionTimeout, UINT64 callAfter, PCHAR certPath, PAwsCredentials pAwsCredentials,
-                         PCurlApiCallbacks pCurlApiCallbacks, PCurlRequest* ppCurlRequest)
+STATUS createCurlRequest(HTTP_REQUEST_VERB curlVerb, PCHAR url, PCHAR body, STREAM_HANDLE streamHandle, PCHAR region, PCHAR service,
+                         UINT64 currentTime, UINT64 connectionTimeout, UINT64 completionTimeout, UINT64 callAfter, PCHAR certPath,
+                         PAwsCredentials pAwsCredentials, PCurlApiCallbacks pCurlApiCallbacks, PCurlRequest* ppCurlRequest)
 {
     ENTERS();
     STATUS retStatus = STATUS_SUCCESS;
@@ -24,7 +24,7 @@ STATUS createCurlRequest(HTTP_REQUEST_VERB curlVerb, PCHAR url, PCHAR body, STRE
 
     // Add body to the size excluding NULL terminator
     if (body != NULL) {
-        bodySize = (UINT32)(STRLEN(body) * SIZEOF(CHAR));
+        bodySize = (UINT32) (STRLEN(body) * SIZEOF(CHAR));
         size += bodySize;
     }
 
@@ -46,6 +46,7 @@ STATUS createCurlRequest(HTTP_REQUEST_VERB curlVerb, PCHAR url, PCHAR body, STRE
     pCurlRequest->requestInfo.currentTime = currentTime;
 
     STRNCPY(pCurlRequest->requestInfo.region, region, MAX_REGION_NAME_LEN);
+    STRNCPY(pCurlRequest->requestInfo.service, service, MAX_SERVICE_NAME_LEN);
     STRNCPY(pCurlRequest->requestInfo.url, url, MAX_URI_CHAR_LEN);
     if (certPath != NULL) {
         STRNCPY(pCurlRequest->requestInfo.certPath, certPath, MAX_PATH_LEN);
@@ -54,7 +55,7 @@ STATUS createCurlRequest(HTTP_REQUEST_VERB curlVerb, PCHAR url, PCHAR body, STRE
     // If the body is specified then it will be a request/response call
     // Otherwise we are streaming
     if (body != NULL) {
-        pCurlRequest->requestInfo.body = (PCHAR)(pCurlRequest + 1);
+        pCurlRequest->requestInfo.body = (PCHAR) (pCurlRequest + 1);
         pCurlRequest->streaming = FALSE;
         MEMCPY(pCurlRequest->requestInfo.body, body, bodySize);
     } else {
