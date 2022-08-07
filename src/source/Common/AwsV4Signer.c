@@ -498,7 +498,7 @@ STATUS generateCanonicalRequestString(PRequestInfo pRequestInfo, PCHAR pRequestS
     len = SHA256_DIGEST_LENGTH * 2;
     CHK(curLen + len <= requestLen, STATUS_BUFFER_TOO_SMALL);
     if (pRequestInfo->body == NULL) {
-        if (pRequestInfo->service == DEFAULT_AWS_SERVICE_NAME) {
+        if (!STRNCMP(pRequestInfo->service, DEFAULT_AWS_SERVICE_NAME, MAX_SERVICE_NAME_LEN)) {
             // Streaming treats this portion as if the body were empty
             CHK_STATUS(hexEncodedSha256((PBYTE) EMPTY_STRING, 0, pCurPtr));
         } else {
